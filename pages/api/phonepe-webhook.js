@@ -1,8 +1,8 @@
 import crypto from "crypto";
 
 // ✅ Hardcoded credentials — use same values in your test script
-const PHONEPE_USERNAME = "your_username_here";
-const PHONEPE_PASSWORD = "your_password_here";
+const PHONEPE_USERNAME = "pawanjoshi";
+const PHONEPE_PASSWORD = "Pawan1joshi";
 
 function getExpectedAuthHash() {
   const authString = `${PHONEPE_USERNAME}:${PHONEPE_PASSWORD}`;
