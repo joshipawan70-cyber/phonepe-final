@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "functions": {
-    "api/phonepe-webhook.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
-}
