@@ -1,18 +1,56 @@
-# URL of your deployed webhook
-$webhookUrl = "https://phonepetry-lzg31zyf1-pawans-projects-98a0b874.vercel.app/api/phonepe-webhook"
+// test-phonepe-webhook.js
+const crypto = require("crypto");
+const axios = require("axios");
 
-# Sample payloads
-$payloads = @(
-    @{ transactionId = "test123"; status = "SUCCESS"; amount = 10000; message = "Payment successful" },
-    @{ transactionId = "test124"; status = "FAILED"; amount = 5000; message = "Payment failed" }
-)
+// ====== CONFIG ======
+const WEBHOOK_URL = "https://yourdomain.com/phonepe-webhook"; // Your webhook endpoint
+const USERNAME = "your_username"; // PhonePe webhook username
+const PASSWORD = "your_password"; // PhonePe webhook password
+// ====================
 
-foreach ($payload in $payloads) {
-    $json = $payload | ConvertTo-Json
-    Write-Host "Sending payload:" $json
-
-    $response = Invoke-RestMethod -Uri $webhookUrl -Method POST -Body $json -ContentType "application/json"
-
-    Write-Host "Response from webhook:" ($response | ConvertTo-Json)
-    Write-Host "---------------------------------------------"
+// 1️⃣ Generate Authorization header
+function generateAuthHash(username, password) {
+  const authString = `${username}:${password}`;
+  return crypto.createHash("sha256").update(authString).digest("hex");
 }
+
+// 2️⃣ Create test payload
+const testPayload = {
+  event: "checkout.order.completed",
+  payload: {
+    orderId: "TESTORDER123",
+    merchantId: "merchantId",
+    merchantOrderId: "merchantOrderId",
+    state: "COMPLETED",
+    amount: 10000,
+    expireAt: Date.now() + 3600000
+  }
+};
+
+// 3️⃣ Send request
+async function sendTestWebhook() {
+  try {
+    const authHash = generateAuthHash(USERNAME, PASSWORD);
+
+    console.log("🔐 Generated Authorization Hash:", authHash);
+    console.log("📩 Sending test webhook...");
+
+    const response = await axios.post(WEBHOOK_URL, testPayload, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHash
+      }
+    });
+
+    console.log("✅ Webhook sent successfully");
+    console.log("📜 Response from server:", response.data);
+  } catch (error) {
+    if (error.response) {
+      console.error("❌ Server responded with error:", error.response.status, error.response.data);
+    } else {
+      console.error("🔥 Request failed:", error.message);
+    }
+  }
+}
+
+sendTestWebhook();
