@@ -7,8 +7,8 @@ const app = express();
 app.use(bodyParser.json());
 
 // Replace with your PhonePe username and password from dashboard
-const PHONEPE_USERNAME = "your_username";
-const PHONEPE_PASSWORD = "your_password";
+const PHONEPE_USERNAME = "pawanjoshi";
+const PHONEPE_PASSWORD = "Pawan1joshi";
 
 // Function to compute expected SHA256 hash
 function getExpectedAuthHash() {
