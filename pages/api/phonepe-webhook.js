@@ -1,8 +1,8 @@
 import crypto from "crypto";
 
-// Load credentials from Vercel environment variables
-const PHONEPE_USERNAME = process.env.PHONEPE_USERNAME;
-const PHONEPE_PASSWORD = process.env.PHONEPE_PASSWORD;
+// ✅ Hardcoded credentials — use same values in your test script
+const PHONEPE_USERNAME = "your_username_here";
+const PHONEPE_PASSWORD = "your_password_here";
 
 function getExpectedAuthHash() {
   const authString = `${PHONEPE_USERNAME}:${PHONEPE_PASSWORD}`;
@@ -10,7 +10,6 @@ function getExpectedAuthHash() {
 }
 
 export default function handler(req, res) {
-  // Allow only POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -29,24 +28,6 @@ export default function handler(req, res) {
     const { event, payload } = req.body;
     console.log("📩 Event:", event);
     console.log("📦 Payload:", payload);
-
-    // Example event handling
-    switch (event) {
-      case "checkout.order.completed":
-        console.log(`✅ Order Completed: ${payload.orderId}`);
-        break;
-      case "checkout.order.failed":
-        console.log(`❌ Order Failed: ${payload.orderId}`);
-        break;
-      case "pg.refund.completed":
-        console.log(`💰 Refund Completed: ${payload.merchantRefundId}`);
-        break;
-      case "pg.refund.failed":
-        console.log(`⚠️ Refund Failed: ${payload.merchantRefundId}`);
-        break;
-      default:
-        console.log(`ℹ️ Unknown Event: ${event}`);
-    }
 
     res.status(200).send("OK");
   } catch (err) {
