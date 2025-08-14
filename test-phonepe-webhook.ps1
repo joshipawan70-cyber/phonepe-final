@@ -3,9 +3,9 @@ const crypto = require("crypto");
 const axios = require("axios");
 
 // ====== CONFIG ======
-const WEBHOOK_URL = "https://yourdomain.com/phonepe-webhook"; // Your webhook endpoint
-const USERNAME = "your_username"; // PhonePe webhook username
-const PASSWORD = "your_password"; // PhonePe webhook password
+const WEBHOOK_URL = "https://phonepe-final-onktnxrzf-pawans-projects-1a01a468.vercel.app/api/phonepe-webhook"; // Your webhook endpoint
+const USERNAME = "pawanjoshi"; // PhonePe webhook username
+const PASSWORD = "Pawan1joshi"; // PhonePe webhook password
 // ====================
 
 // 1️⃣ Generate Authorization header
