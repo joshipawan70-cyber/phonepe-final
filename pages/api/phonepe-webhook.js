@@ -1,43 +1,79 @@
-// pages/api/phonepe-webhook.js
-import crypto from 'crypto';
+// phonepe-webhook.js
+const express = require("express");
+const crypto = require("crypto");
+const bodyParser = require("body-parser");
 
-export default function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+const app = express();
+app.use(bodyParser.json());
 
-  // ---- 1. Check Authorization Header ----
-  const authHeader = req.headers['authorization'];
-  const username = 'pawanjoshi';   // replace with your test username
-  const password = 'Pawan1joshi';  // replace with your test password
-  const expectedHash = crypto
-    .createHash('sha256')
-    .update(`${username}:${password}`)
-    .digest('hex');
+// Replace with your PhonePe username and password from dashboard
+const PHONEPE_USERNAME = "your_username";
+const PHONEPE_PASSWORD = "your_password";
 
-  if (!authHeader || authHeader !== `SHA256 ${expectedHash}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  // ---- 2. Verify PhonePe Signature ----
-  const body = JSON.stringify(req.body);  // raw JSON string
-  const secretKey = 'ODRjZDRmZTctM2JjYy00MmY2LWIyYjktYzljM2M4MWI5NTBm'; // your PhonePe secret
-
-  const computedSignature = crypto
-    .createHmac('sha256', secretKey)
-    .update(body)
-    .digest('hex');
-
-  const receivedSignature = req.headers['x-verify'];
-
-  if (!receivedSignature || receivedSignature !== computedSignature) {
-    return res.status(403).json({ error: 'Invalid signature' });
-  }
-
-  // ---- 3. Process Webhook Payload ----
-  console.log('Webhook payload:', req.body);
-
-  // You can add your business logic here: store in DB, trigger actions, etc.
-
-  return res.status(200).json({ message: 'Webhook processed successfully' });
+// Function to compute expected SHA256 hash
+function getExpectedAuthHash() {
+  const authString = `${PHONEPE_USERNAME}:${PHONEPE_PASSWORD}`;
+  return crypto.createHash("sha256").update(authString).digest("hex");
 }
+
+app.post("/phonepe-webhook", (req, res) => {
+  try {
+    // 1️⃣ Extract Authorization header
+    const incomingAuth = req.headers["authorization"];
+    if (!incomingAuth) {
+      console.warn("❌ Missing Authorization header");
+      return res.status(401).send("Missing Authorization header");
+    }
+
+    // 2️⃣ Verify hash
+    const expectedHash = getExpectedAuthHash();
+    if (incomingAuth !== expectedHash) {
+      console.warn("❌ Invalid Authorization hash");
+      return res.status(403).send("Unauthorized");
+    }
+
+    // 3️⃣ Extract event & payload
+    const { event, payload } = req.body;
+    if (!event || !payload) {
+      console.warn("❌ Missing event or payload in webhook body");
+      return res.status(400).send("Invalid webhook data");
+    }
+
+    console.log(`📩 Received event: ${event}`);
+
+    // 4️⃣ State validation (only trust after auth passes)
+    if (payload.state && payload.state !== "COMPLETED" && payload.state !== "CONFIRMED") {
+      console.warn(`⚠️ Ignoring event with non-final state: ${payload.state}`);
+      return res.status(200).send("Ignored - state not completed");
+    }
+
+    // 5️⃣ Process specific events
+    switch (event) {
+      case "checkout.order.completed":
+        console.log(`✅ Order Completed: ${payload.orderId}`);
+        break;
+      case "checkout.order.failed":
+        console.log(`❌ Order Failed: ${payload.orderId}`);
+        break;
+      case "pg.refund.completed":
+        console.log(`💰 Refund Completed: ${payload.merchantRefundId}`);
+        break;
+      case "pg.refund.failed":
+        console.log(`⚠️ Refund Failed: ${payload.merchantRefundId}`);
+        break;
+      default:
+        console.log(`ℹ️ Unknown Event Type: ${event}`);
+    }
+
+    // 6️⃣ Acknowledge
+    res.status(200).send("OK");
+  } catch (err) {
+    console.error("🔥 Webhook processing error:", err);
+    res.status(500).send("Server Error");
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`📡 PhonePe Webhook server running on port ${PORT}`);
+});
